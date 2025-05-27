@@ -8,9 +8,16 @@ https://docs.djangoproject.com/en/4.1/howto/deployment/wsgi/
 """
 
 import os
+import sys
+from pathlib import Path
 
-from django.core.wsgi import get_wsgi_application
+# Adiciona o diretório do projeto ao PYTHONPATH
+BASE_DIR = Path(__file__).resolve().parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.append(str(BASE_DIR))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+
+from django.core.wsgi import get_wsgi_application
 
 application = get_wsgi_application()
