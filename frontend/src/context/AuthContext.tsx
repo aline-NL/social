@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import { User } from '../types';
 
@@ -19,10 +19,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       if (token) {
         try {
@@ -30,7 +31,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(userData);
         } catch (error) {
           console.error('Failed to load user', error);
-          localStorage.removeItem('token');
+          // Clear tokens if there's an error
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
         }
       }
       
@@ -42,20 +45,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      const { user: userData, token } = await api.login({ email, password });
-      localStorage.setItem('token', token);
+      const { user: userData } = await api.login({ email, password });
       setUser(userData);
-      navigate('/dashboard');
+      
+      // Redirect to the originally requested page or dashboard
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('Login failed', error);
       throw error;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    navigate('/login');
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error('Logout error', error);
+    } finally {
+      setUser(null);
+      navigate('/login');
+    }
   };
 
   const isAuthenticated = !!user;

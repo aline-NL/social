@@ -11,11 +11,14 @@ psycopg2-binary==2.9.9
 # API
 djangorestframework==3.14.0
 django-filter==23.1
-# djangorestframework-simplejwt==5.3.1
+djangorestframework-simplejwt==5.3.1
 # djangorestframework-api-key==2.2.0
 
 # CORS
-django-cors-headers==4.3.1
+django-cors-headers==4.7.0
+
+# HTTP
+urllib3<2.0.0
 
 # File handling
 Pillow==10.2.0

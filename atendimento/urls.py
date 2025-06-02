@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from .views_auth import CustomTokenObtainPairView, CustomTokenRefreshView, UserProfileView
 
 router = DefaultRouter()
 
@@ -15,10 +16,20 @@ router.register(r'presencas', views.PresencaViewSet)
 router.register(r'entregas-cestas', views.EntregaCestaViewSet, basename='entregacesta')
 router.register(r'configuracoes', views.ConfiguracaoSistemaViewSet, basename='configuracao')
 
+# URLs de autenticação
+auth_urls = [
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
+    path('me/', UserProfileView.as_view(), name='user_profile'),
+]
+
 # Additional URL patterns
 urlpatterns = [
     # API Root
     path('', include(router.urls)),
+    
+    # Autenticação
+    path('auth/', include(auth_urls)),
     
     # Relatórios
     path('relatorios/', views.RelatoriosViewSet.as_view({'get': 'list'}), name='relatorios-list'),

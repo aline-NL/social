@@ -1,0 +1,12 @@
+{
+  "name": "sistema-atendimento-social-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "vite preview --port 8080 --host",
+    "serve": "vite preview --port 8080 --host"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}

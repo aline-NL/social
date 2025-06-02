@@ -76,6 +76,7 @@ coverage/
 .env*
 !.env.example
 !.env.test
+!.env.production
 
 # Local development
 .local/
@@ -192,7 +193,7 @@ $RECYCLE.BIN/
 .nfs*
 
 # Docker
-Dockerfile
+# Dockerfile
 .dockerignore
 
 # Local development

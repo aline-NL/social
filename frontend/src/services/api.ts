@@ -1,7 +1,7 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-// Use process.env for Jest compatibility
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+// Use import.meta.env for Vite compatibility
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 class ApiService {
   private api: AxiosInstance;
@@ -17,9 +17,9 @@ class ApiService {
     // Add request interceptor to include auth token
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         if (token) {
-          config.headers.Authorization = `Token ${token}`;
+          config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },
@@ -27,17 +27,84 @@ class ApiService {
         return Promise.reject(error);
       }
     );
+
+    // Add response interceptor to handle token refresh
+    this.api.interceptors.response.use(
+      (response) => response,
+      async (error: AxiosError) => {
+        const originalRequest = error.config as any;
+        
+        // If error is 401 and we haven't already tried to refresh the token
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          
+          try {
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) {
+              // No refresh token, redirect to login
+              window.location.href = '/login';
+              return Promise.reject(error);
+            }
+            
+            // Try to refresh the token
+            const response = await axios.post(`${API_URL}/auth/token/refresh/`, {
+              refresh: refreshToken,
+            });
+            
+            const { access, refresh } = response.data;
+            
+            // Update tokens in storage
+            localStorage.setItem('access_token', access);
+            if (refresh) {
+              localStorage.setItem('refresh_token', refresh);
+            }
+            
+            // Update the Authorization header
+            originalRequest.headers.Authorization = `Bearer ${access}`;
+            
+            // Retry the original request
+            return this.api(originalRequest);
+          } catch (refreshError) {
+            // If refresh fails, clear tokens and redirect to login
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          }
+        }
+        
+        return Promise.reject(error);
+      }
+    );
   }
 
   // Auth endpoints
   async login(credentials: { email: string; password: string }) {
-    const response = await this.api.post('/auth/login/', credentials);
-    return response.data;
+    const response = await this.api.post('/auth/token/', {
+      email: credentials.email,
+      password: credentials.password,
+    });
+    
+    const { access, refresh, user } = response.data;
+    
+    // Store tokens
+    localStorage.setItem('access_token', access);
+    if (refresh) {
+      localStorage.setItem('refresh_token', refresh);
+    }
+    
+    return { user, token: access };
   }
 
   async getCurrentUser() {
     const response = await this.api.get('/auth/me/');
     return response.data;
+  }
+  
+  async logout() {
+    // Clear tokens
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
   }
 
   // Family endpoints
