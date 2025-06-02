@@ -58,6 +58,11 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
     
+    # Carrega as variáveis de ambiente do arquivo .env se existir
+    if os.path.exists(os.path.join(BASE_DIR, '.env')):
+        from dotenv import load_dotenv
+        load_dotenv()
+    
     # Executa o comando
     execute_from_command_line(sys.argv)
 

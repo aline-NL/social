@@ -9,26 +9,20 @@ https://docs.djangoproject.com/en/4.1/howto/deployment/wsgi/
 
 import os
 import sys
-import traceback
 from pathlib import Path
-
-# Configuração do ambiente de depuração
-DEBUG_IMPORT = os.environ.get('DJANGO_DEBUG_IMPORT', '').lower() == 'true'
 
 # Define o diretório base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
-PROJECT_ROOT = BASE_DIR.parent
-
-# Adiciona o diretório raiz ao PYTHONPATH
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Adiciona o diretório do projeto ao PYTHONPATH
 if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
+    sys.path.append(str(BASE_DIR))
+
+# Configura o módulo de configurações do Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 # Debug de importação
-if DEBUG_IMPORT:
+if os.environ.get('DJANGO_DEBUG_IMPORT', '').lower() == 'true':
     print("\n=== WSGI STARTUP DEBUGGING ===")
     print(f"Python version: {sys.version}")
     print(f"Current working directory: {os.getcwd()}")

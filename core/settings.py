@@ -110,23 +110,25 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# Use SQLite in development, PostgreSQL in production
-if DEBUG or 'test' in sys.argv:
+# Configuração do banco de dados para Railway
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('PGDATABASE', default=''),
+        'USER': config('PGUSER', default=''),
+        'PASSWORD': config('PGPASSWORD', default=''),
+        'HOST': config('PGHOST', default=''),
+        'PORT': config('PGPORT', default=''),
+    }
+}
+
+# Se não houver configuração do PostgreSQL, usa SQLite para desenvolvimento local
+if not all([DATABASES['default']['NAME'], DATABASES['default']['HOST']]):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
-    }
-else:
-    # Parse database configuration from DATABASE_URL environment variable
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=config('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
     }
 
 
